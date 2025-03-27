@@ -1,9 +1,4 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: mcq
 
----
 apiVersion: v1
 kind: Secret
 metadata:
