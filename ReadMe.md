@@ -52,6 +52,13 @@ kubectl top nodes
 kubectl top pods --namespace=mcq
 kubectl get hpa --namespace=mcq
 
+# Cleanup
+
+kubectl delete --namespace=mcq -f "/Users/sagarmhatre/Documents/src/mcquery/mcquery-k8s/mcquery-hpa.txt"
+kubectl delete -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+kubectl get deployment metrics-server -n kube-system
+kubectl get hpa --namespace=mcq
+
 ```
 
 ```sh
