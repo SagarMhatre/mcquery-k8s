@@ -47,3 +47,24 @@ git branch -M main
 git remote add origin https://github.com/SagarMhatre/mcquery-k8s.git
 git push -u origin main
 ```
+
+## ArgoCD
+
+```sh
+kubectl create namespace argocd
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
+# Getting the password for admin
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 --decode; echo
+
+# Kubectl port-forwarding can  be used to connect to the API server without exposing the service.
+
+kubectl port-forward svc/argocd-server -n argocd 8080:443
+
+# OR Change the argocd-server service type to LoadBalancer:
+# kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
+
+# https://localhost:8080/  admin
+# 1. Create Project with SOURCE REPOSITORY & DESTINATION
+# 2. Add the Project
+```
