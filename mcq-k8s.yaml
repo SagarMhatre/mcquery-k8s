@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mcq
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: aws-credentials
+  namespace: mcq
+type: Opaque
+data:
+  AWS_ACCESS_KEY_ID: QUtJQTRBUTNVT1BNR0E1REpZT0c=
+  AWS_SECRET_ACCESS_KEY: aUhkUFJERVdSMjE3cUZzaDRmbWtSYnJqdWd1TVNsTXVBMisrblFlOA==
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcq-tool
+  namespace: mcq
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcq-tool
+  template:
+    metadata:
+      labels:
+        app: mcq-tool
+    spec:
+      containers:
+      - name: mcq-tool
+        image: sagarmhatre/mcquery:1.7
+        ports:
+        - containerPort: 5000
+        env:
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: aws-credentials
+              key: AWS_ACCESS_KEY_ID
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: aws-credentials
+              key: AWS_SECRET_ACCESS_KEY
+        - name: AWS_REGION
+          value: "ap-southeast-1"
+
+
+  
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcq-tool-service
+  namespace: mcq
+spec:
+  selector:
+    app: mcq-tool
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5000
+  type: LoadBalancer
