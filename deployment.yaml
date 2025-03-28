@@ -27,7 +27,7 @@ spec:
     spec:
       containers:
       - name: mcq-tool
-        image: sagarmhatre/mcquery:1.8
+        image: sagarmhatre/mcquery:1.9
         ports:
         - containerPort: 5000
         env:
