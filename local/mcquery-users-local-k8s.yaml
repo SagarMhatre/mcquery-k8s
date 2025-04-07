@@ -1,0 +1,129 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mcq
+---
+
+# Secret for PostgreSQL credentials
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-credentials
+  namespace: mcq
+type: Opaque
+data:
+  POSTGRES_PASSWORD: QVdTX1NFQ1JFVF9BQ0NFU1NfS0VZX0hFUkU=
+---
+
+# PostgreSQL Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: mcq
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:alpine3.14
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_USER
+          value: "postgres"
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-credentials
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_DB
+          value: "postgres"
+        resources:
+          requests:
+            cpu: "100m"
+          limits:
+            cpu: "500m"
+---
+
+# PostgreSQL Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: mcq
+spec:
+  selector:
+    app: postgres
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+
+# mcquery-users Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcquery-users
+  namespace: mcq
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcquery-users
+  template:
+    metadata:
+      labels:
+        app: mcquery-users
+    spec:
+      containers:
+      - name: mcquery-users
+        image: mcquery-users:1.0
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DB_PORT
+          value: "5432"
+        - name: DB_HOST
+          value: "postgres-service"
+        - name: DB_NAME
+          value: "postgres"
+        - name: DB_USERNAME
+          value: "postgres"
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-credentials
+              key: POSTGRES_PASSWORD
+        resources:
+          requests:
+            cpu: "100m"
+          limits:
+            cpu: "500m"
+---
+
+# mcquery-users Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcquery-users-service
+  namespace: mcq
+  annotations:
+    alb.ingress.kubernetes.io/healthcheck-path: /static/dashboard.html
+spec:
+  selector:
+    app: mcquery-users
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+  type: NodePort
